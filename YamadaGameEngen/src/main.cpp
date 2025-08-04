@@ -1,13 +1,12 @@
 #include "include/pch.h"
 #include "include/SceneManager.h"
 #include "include/GameScene.h"
+#include "include/InputManager.h"
 
 // グローバル変数
 HWND g_hWnd = nullptr;
 const int g_WindowWidth = 1280;
 const int g_WindowHeight = 720;
-
-SceneManager sceneManager;
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -15,9 +14,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+
+    case WM_KEYDOWN:
+        if ((lParam & (1 << 30)) == 0) {
+            //OutputDebugStringA("WndProc: WM_KEYDOWN\n");
+            InputManager::OnKeyDown(wParam);
+        }
+        return 0;
+
+    case WM_KEYUP:
+        //OutputDebugStringA("WndProc: WM_KEYUP\n");
+        InputManager::OnKeyUp(wParam);
+        return 0;
     }
+
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+
 
 // WinMainエントリーポイント
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
@@ -52,11 +66,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     ShowWindow(g_hWnd, nCmdShow);
     UpdateWindow(g_hWnd);
 
-    // シーン準備
-    sceneManager.AddScene("Game", std::make_unique<GameScene>());
-    sceneManager.ChangeScene("Game");
+    // ここで最初に使うシーンを設定
+    SceneManager::GetInstance().AddScene("Game", std::make_unique<GameScene>());
+    SceneManager::GetInstance().ChangeScene("Game");
 
-	sceneManager.InitializeCurrent();
+    SceneManager::GetInstance().InitializeCurrent();
+    InputManager::Initialize();
 
     // タイマーの初期化
     LARGE_INTEGER frequency;
@@ -73,7 +88,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             DispatchMessage(&msg);
         }
         else {
-            // ここで描画やゲームロジックの更新を行う
 
             // deltaTimeの計算
             LARGE_INTEGER currentTime;
@@ -82,7 +96,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             float deltaTime = static_cast<float>(currentTime.QuadPart - prevTime.QuadPart) / frequency.QuadPart;
             prevTime = currentTime;
 
-            sceneManager.UpdateCurrent(deltaTime);
+            SceneManager::GetInstance().UpdateCurrent(deltaTime);
+
+            InputManager::Update();//SceneUpdateのあとにやる
+            
         }
     }
 
