@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ソース ファイル\GameEngen">
+      <UniqueIdentifier>{f99c0fbe-f5e2-4fa7-a0b1-c10ae194c747}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\GameEngen">
+      <UniqueIdentifier>{837d2b60-e63a-457e-9c8b-7333c2cc4904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\GameEngen\Interface">
+      <UniqueIdentifier>{2d9f6e47-e2ed-449f-a85a-e058d6567213}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exampleSystem.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pch.cpp">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exampleEntity.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SceneManager.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\ISystem.h">
+      <Filter>ヘッダー ファイル\GameEngen\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IComponent.h">
+      <Filter>ヘッダー ファイル\GameEngen\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IEntity.h">
+      <Filter>ヘッダー ファイル\GameEngen\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IScene.h">
+      <Filter>ヘッダー ファイル\GameEngen\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exampleSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pch.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exampleComponent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exampleEntity.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SceneManager.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InputManager.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
