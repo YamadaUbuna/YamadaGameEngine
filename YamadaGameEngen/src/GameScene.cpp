@@ -3,11 +3,11 @@
 
 #include "include/exampleSystem.h"
 #include "include/exampleComponent.h"
+#include "include/InputManager.h"
 
 
 void GameScene::Initialize()
 {
-
     IEntity* example = CreateEntity();
     example->AddComponent(std::make_unique<exampleComponent>());
 
@@ -17,6 +17,7 @@ void GameScene::Initialize()
         system->Initialize(*this);
 	}
 }
+
 
 void GameScene::Update(float deltaTime)
 {

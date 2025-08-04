@@ -13,7 +13,20 @@ private:
     std::unordered_map<std::string, std::unique_ptr<IScene>> m_scenes;
     IScene* m_currentScene = nullptr;
 
+    SceneManager() = default;
+
 public:
+
+    // コピー禁止
+    SceneManager(const SceneManager&) = delete;
+    SceneManager& operator=(const SceneManager&) = delete;
+
+    // インスタンス取得
+    static SceneManager& GetInstance() {
+        static SceneManager instance;
+        return instance;
+    }
+
     // シーンを登録
     void AddScene(const std::string& name, std::unique_ptr<IScene> scene) {
         m_scenes[name] = std::move(scene);
