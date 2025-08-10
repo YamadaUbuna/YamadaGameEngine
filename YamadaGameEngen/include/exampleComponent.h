@@ -10,6 +10,7 @@ private:
     std::string m_myName = "yamada";
 
 public:
+    ~exampleComponent() = default;
     std::string GetMyName() { return m_myName; }
 };
 

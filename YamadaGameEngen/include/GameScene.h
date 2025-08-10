@@ -35,8 +35,15 @@ public:
     void RemoveSystem(ISystem* system) override;
     const std::vector<ISystem*>& GetSystems() const override { return m_systems; }
 
+	// ƒJƒƒ‰‚Ìæ“¾
+	IEntity* GetMainCameraEntity() const {// ƒJƒƒ‰‚ğ‚Á‚Ä‚¢‚éEntity‚ğ•Ô‚·B
+        return m_mainCamera;
+    }
+
+    void SetMainCamera(IEntity* camera);
+
 private:
     std::vector<std::unique_ptr<IEntity>> m_entities;
     std::vector<ISystem*> m_systems;
-    // Camera m_mainCamera;
+    IEntity* m_mainCamera = nullptr;
 };

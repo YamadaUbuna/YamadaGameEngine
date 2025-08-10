@@ -3,6 +3,7 @@
 #include <memory>
 #include "include/IEntity.h"
 #include "include/ISystem.h"
+#include "include/exampleEntity.h"
 
 class ISystem;
 
@@ -22,5 +23,7 @@ public:
     virtual void AddSystem(ISystem* system) = 0;
     virtual void RemoveSystem(ISystem* system) = 0;
     virtual const std::vector<ISystem*>& GetSystems() const = 0;
+
+	virtual IEntity* GetMainCameraEntity() const = 0; // ƒJƒƒ‰‚Ìæ“¾
    
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "include/IEntity.h"
+#include "IEntity.h"
 class exampleEntity :
     public IEntity
 {
@@ -15,5 +16,10 @@ public:
     void AddComponent(std::type_index type, std::unique_ptr<IComponent> comp) override {
         m_components[type] = std::move(comp);
     }
+};
+
+class ExampleEntity :
+    public IEntity
+{
 };
 

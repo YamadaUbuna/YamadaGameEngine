@@ -22,6 +22,9 @@
     <Filter Include="ヘッダー ファイル\GameEngen\Interface">
       <UniqueIdentifier>{2d9f6e47-e2ed-449f-a85a-e058d6567213}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\test">
+      <UniqueIdentifier>{46100a76-eb0c-4cac-aa08-d090c08127c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -43,6 +46,24 @@
       <Filter>ソース ファイル\GameEngen</Filter>
     </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderSystem.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CameraSystem.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MaterialSystem.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PipelineManager.cpp">
+      <Filter>ソース ファイル\GameEngen</Filter>
+    </ClCompile>
+    <ClCompile Include="include\LoadCSO.cpp">
       <Filter>ソース ファイル\GameEngen</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,5 +101,48 @@
     <ClInclude Include="include\InputManager.h">
       <Filter>ヘッダー ファイル\GameEngen</Filter>
     </ClInclude>
+    <ClInclude Include="include\Renderer.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MeshComponent.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MaterialComponent.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CameraComponent.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TransformComponent .h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderSystem.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CameraSystem.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PipelineManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MaterialSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LoadCSO.h">
+      <Filter>ヘッダー ファイル\GameEngen</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\TestPixelShader.hlsl">
+      <Filter>リソース ファイル\test</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\TestVertexShader.hlsl">
+      <Filter>リソース ファイル\test</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\TestHeader.hlsli">
+      <Filter>リソース ファイル\test</Filter>
+    </None>
   </ItemGroup>
 </Project>

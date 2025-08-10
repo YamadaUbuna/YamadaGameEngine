@@ -11,6 +11,4 @@ public:
     virtual void Initialize(IScene& scene) = 0;
     virtual void Update(IScene& scene, float deltaTime) = 0;
 
-    // •`‰æˆ—iMeshRenderer‚È‚Çj
-    //virtual void Render(IScene& scene, Renderer& renderer) {}
 };

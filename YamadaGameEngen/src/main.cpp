@@ -3,6 +3,8 @@
 #include "include/GameScene.h"
 #include "include/InputManager.h"
 
+#include "include/Renderer.h"
+
 // グローバル変数
 HWND g_hWnd = nullptr;
 const int g_WindowWidth = 1280;
@@ -73,6 +75,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     SceneManager::GetInstance().InitializeCurrent();
     InputManager::Initialize();
 
+    Renderer::GetInstance().Initialize(g_hWnd, g_WindowWidth, g_WindowHeight);
+
     // タイマーの初期化
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
@@ -95,8 +99,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
             float deltaTime = static_cast<float>(currentTime.QuadPart - prevTime.QuadPart) / frequency.QuadPart;
             prevTime = currentTime;
-
-            SceneManager::GetInstance().UpdateCurrent(deltaTime);
+            Renderer::GetInstance().RenderBegin();
+			SceneManager::GetInstance().UpdateCurrent(deltaTime);//ここで描画もするので、上下でRenderBeginとRenderEndを呼ぶ必要がある
+            Renderer::GetInstance().RenderEnd();
 
             InputManager::Update();//SceneUpdateのあとにやる
             
