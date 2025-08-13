@@ -12,10 +12,10 @@ exampleEntity::exampleEntity(IScene* scene)
     TransformComponent* transformComponent = this->GetComponent<TransformComponent>();
     transformComponent->SetPosition({ 0.0f, 0.0f, 0.0f });
     transformComponent->SetRotation({ 0.0f, 0.0f, 0.0f });
-    transformComponent->SetScale({ 1.0f, 1.0f, 1.0f });
+    transformComponent->SetScale({ 0.01f, 0.01f, 0.01f });
 
     MaterialComponent* materialComponent = this->GetComponent<MaterialComponent>();
-    materialComponent->SetPipelineType(PipelineType::test);
+    materialComponent->SetPipelineType(PipelineType::fbx);
     materialComponent->SetRootSignatureType(RootSignatureType::def);
 
 

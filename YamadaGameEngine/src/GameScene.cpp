@@ -16,7 +16,7 @@ void GameScene::Initialize()
 {
     //‚±‚±‚ÅScene‚ÅŽg‚¤Model‚à“o˜^‚·‚é
 
-    assetManager.LoadModel("hero", L"hero.fbx");
+    assetManager.LoadModel("hero", L"Resource/unitychan.fbx");
 
     IEntity* test = CreateEntity<exampleEntity>(this);
 	IEntity* cameraEntity = CreateEntity<CameraEntity>();

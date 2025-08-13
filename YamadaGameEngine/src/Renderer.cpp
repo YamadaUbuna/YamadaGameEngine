@@ -199,27 +199,85 @@ void Renderer::Initialize(HWND hwnd, int width, int height)
     }
 
     // --- コマンドアロケータ & コマンドリスト ---
-    ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+    {
+        ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
 
-    ThrowIfFailed(m_device->CreateCommandList(
-        0,
-        D3D12_COMMAND_LIST_TYPE_DIRECT,
-        m_commandAllocator.Get(),
-        nullptr,
-        IID_PPV_ARGS(&m_commandList)));
-    m_commandList->Close(); // 初期状態で閉じておく
+        ThrowIfFailed(m_device->CreateCommandList(
+            0,
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            m_commandAllocator.Get(),
+            nullptr,
+            IID_PPV_ARGS(&m_commandList)));
+        m_commandList->Close(); // 初期状態で閉じておく
 
-    // --- フェンスとイベント ---
-    ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-    m_fenceValue = 1;
+        // --- フェンスとイベント ---
+        ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        m_fenceValue = 1;
 
-    m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!m_fenceEvent)
-        throw std::runtime_error("Failed to create fence event handle.");
+        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (!m_fenceEvent)
+            throw std::runtime_error("Failed to create fence event handle.");
 
-    // --- 一時アップロードバッファ配列初期化 ---
-    m_tempUploadBuffers.resize(FrameCount);
-    m_fenceValues.resize(FrameCount, 0); // フェンス値の初期化
+        // --- 一時アップロードバッファ配列初期化 ---
+        m_tempUploadBuffers.resize(FrameCount);
+        m_fenceValues.resize(FrameCount, 0); // フェンス値の初期化
+
+    }
+
+    // --- 深度ステンシルバッファと DSV ヒープ作成 ---
+    {
+        // DSV用ディスクリプタヒープ作成
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = 1;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
+
+        // 深度ステンシルバッファのリソース作成
+        D3D12_RESOURCE_DESC depthStencilDesc = {};
+        depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Alignment = 0;
+        depthStencilDesc.Width = m_width;
+        depthStencilDesc.Height = m_height;
+        depthStencilDesc.DepthOrArraySize = 1;
+        depthStencilDesc.MipLevels = 1;
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.SampleDesc.Count = 1;
+        depthStencilDesc.SampleDesc.Quality = 0;
+        depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+        CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT,
+            width,
+            height,
+            1, 0, 1, 0,
+            D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+        );
+
+        D3D12_CLEAR_VALUE clearValue = {};
+        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        clearValue.DepthStencil.Depth = 1.0f;
+        clearValue.DepthStencil.Stencil = 0;
+
+        m_device->CreateCommittedResource(
+            &heapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &depthDesc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &clearValue,
+            IID_PPV_ARGS(&m_depthStencilBuffer)
+        );
+
+        // DSV作成
+        m_device->CreateDepthStencilView(
+            m_depthStencilBuffer.Get(),
+            nullptr,
+            m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
+        );
+
+    }
 
 }
 
@@ -228,7 +286,7 @@ void Renderer::RenderBegin()
 {
     SignalAndWait(m_currentFrameIndex);
 
-    // 描画用コマンドアロケータ/リストはフレームごとにリセットして使う
+    // コマンドアロケータとリストをリセット
     if (FAILED(m_commandAllocator->Reset())) {
         throw std::runtime_error("Failed to reset command allocator");
     }
@@ -236,31 +294,47 @@ void Renderer::RenderBegin()
         throw std::runtime_error("Failed to reset command list");
     }
 
-    // バリア: Present -> RenderTarget
+    // Present → RenderTarget に遷移
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         m_renderTargets[m_currentFrameIndex].Get(),
         D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET);
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
     m_commandList->ResourceBarrier(1, &barrier);
 
     // ビューポート / シザー
-    D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<FLOAT>(m_width), static_cast<FLOAT>(m_height), 0.0f, 1.0f };
-    D3D12_RECT scissorRect = { 0, 0, static_cast<LONG>(m_width), static_cast<LONG>(m_height) };
+    D3D12_VIEWPORT viewport = { 0.0f, 0.0f, (FLOAT)m_width, (FLOAT)m_height, 0.0f, 1.0f };
+    D3D12_RECT scissorRect = { 0, 0, (LONG)m_width, (LONG)m_height };
     m_commandList->RSSetViewports(1, &viewport);
     m_commandList->RSSetScissorRects(1, &scissorRect);
 
-    // RTV ハンドルを取得してセット
+    // RTV と DSV ハンドル
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
         m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-        static_cast<INT>(m_currentFrameIndex),
-        static_cast<INT>(m_rtvDescriptorSize));
+        m_currentFrameIndex,
+        m_rtvDescriptorSize
+    );
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
+        m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    // 出力ターゲットに RTV と DSV をセット
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+    // デプスバッファクリア
+    m_commandList->ClearDepthStencilView(
+        dsvHandle,
+        D3D12_CLEAR_FLAG_DEPTH,
+        1.0f,
+        0,
+        0, nullptr
+    );
 
     // 画面クリア
     const float clearColor[] = { 0.2f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 }
+
 
 
 void Renderer::RenderEnd()

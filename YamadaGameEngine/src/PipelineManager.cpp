@@ -12,6 +12,7 @@ void PipelineManager::Initialize()
 {
     CreateRootSignature();
     CreateTestPipelineState(RootSignatureType::def);
+	CreateFbxPipelineState(RootSignatureType::def);
 }
 
 ID3D12PipelineState* PipelineManager::GetPipelineState(PipelineType type)
@@ -194,6 +195,16 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PipelineManager::CreateFbxPipelineSt
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+
+    D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
+    depthStencilDesc.DepthEnable = TRUE;
+    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    depthStencilDesc.StencilEnable = FALSE;
+
+    psoDesc.DepthStencilState = depthStencilDesc;
+    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> pso;
     HRESULT hr = Renderer::GetInstance().GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso));

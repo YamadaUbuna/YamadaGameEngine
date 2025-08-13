@@ -6,10 +6,8 @@
 class ModelData
 {
 public:
-
-    const std::vector<std::unique_ptr<MeshComponent>>& GetMeshes() const {
-        return m_meshes;
-    }
+    const std::vector<std::unique_ptr<MeshComponent>>& GetMeshes() const { return m_meshes; }
+    //const std::vector<std::string>& GetMeshTextureIds() const { return m_meshTextureIds; }
 
 
     void AddMesh(std::unique_ptr<MeshComponent> mesh) {
@@ -19,5 +17,6 @@ public:
 
 private:
     std::vector<std::unique_ptr<MeshComponent>> m_meshes;
+    std::vector<std::string> m_meshTextureIds;
 };
 

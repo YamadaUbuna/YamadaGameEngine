@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "include/ModelData.h"
+#include <fbxsdk.h>
 
 //・ModelManager（あるいはAssetManager）
 //モデル（ModelComponentや複数メッシュのセット）を読み込み・管理・キャッシュするクラス
@@ -20,7 +21,19 @@ public:
 private:
     // ID -> ModelData のマップ（ModelDataはメッシュなどを持つ実体クラス）
     std::unordered_map<std::string, std::unique_ptr<ModelData>> m_models;
-    void InitializeMeshBuffers(MeshComponent* meshComponent);
+    void UploadMeshToGPU(MeshComponent* meshComponent);
+    
 };
 
+class FbxLoader {
+    public:
+    // FBXファイルを読み込んでModelDataを生成
+		bool LoadModel(const std::wstring& filepath, ModelData& outModel);
+        void ParseNode(FbxNode* node, ModelData& outModel);
+        void ParseMesh(FbxMesh* mesh, ModelData& outModel);
+        //std::string GetTexturePath(FbxSurfaceMaterial* material, const char* propName);
+
+private:
+   
+};
 
