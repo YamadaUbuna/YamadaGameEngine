@@ -14,13 +14,7 @@ struct FbxVertex
 {
     XMFLOAT3 position;
     XMFLOAT3 normal;
-    XMFLOAT4 color;
     XMFLOAT2 uv;
-};
-
-struct Vertex
-{
-    XMFLOAT3 position;
     XMFLOAT4 color;
 };
 
@@ -30,10 +24,10 @@ public:
     MeshComponent() = default;
     ~MeshComponent() = default;
 
-    void SetVertices(const std::vector<Vertex>& verts) { vertices = verts; }
+    void SetVertices(const std::vector<FbxVertex>& verts) { vertices = verts; }
     void SetIndices(const std::vector<uint32_t>& inds) { indices = inds; }
 
-    const std::vector<Vertex>& GetVertices() const { return vertices; }
+    const std::vector<FbxVertex>& GetVertices() const { return vertices; }
     const std::vector<uint32_t>& GetIndices() const { return indices; }
 
     // ÉQÉbÉ^Å[
@@ -45,11 +39,11 @@ public:
         return indexBuffer.Get();
     }
 
-    D3D12_VERTEX_BUFFER_VIEW GetVertexBufferView() const {
+    const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const {
         return vertexBufferView;
     }
 
-    D3D12_INDEX_BUFFER_VIEW GetIndexBufferView() const {
+    const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() const {
         return indexBufferView;
     }
 
@@ -70,14 +64,17 @@ public:
         indexBufferView = view;
     }
 
-
+    void SetMaterialId(const std::string& id) { materialId = id; }
+    const std::string& GetMaterialId() const { return materialId; }
 
 private:
-    std::vector<Vertex> vertices;
+    std::vector<FbxVertex> vertices;
     std::vector<uint32_t> indices;
 
     Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
     Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+    std::string materialId;
 };

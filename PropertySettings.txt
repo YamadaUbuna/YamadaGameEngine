@@ -2,7 +2,13 @@
 
 「追加の依存ファイル」に、次のように入力します：
 
-d3d12.lib; dxgi.lib; d3dcompiler.lib;
+dxgi.lib
+d3d12.lib
+dxguid.lib
+d3dcompiler.lib
+libfbxsdk-md.lib
+libxml2-md.lib
+zlib-md.lib
 
 -------
 
@@ -16,3 +22,11 @@ C/C++　→　プリコンパイル済ヘッダー
 
 プリコンパイル済ヘッダー　→　作成
 プリコンパイル済ヘッダー　ファイル　→　include\pch.h
+
+VC++ディレクトリ
+インクルードディレクトリ
+C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include
+
+ライブラリディレクトリ
+C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug
+

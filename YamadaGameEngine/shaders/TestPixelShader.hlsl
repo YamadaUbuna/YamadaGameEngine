@@ -3,5 +3,6 @@
 
 float4 PSMain(PS_INPUT input) : SV_TARGET
 {
-    return input.Col;
+    float4 texColor = gTexture.Sample(gSampler, input.TexCoord);
+    return texColor;
 }

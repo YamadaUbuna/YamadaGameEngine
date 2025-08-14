@@ -5,12 +5,15 @@
 #include <dxgi1_6.h>
 #include <string>
 #include <vector>
+#include <fbxsdk.h>
 
 #include "include/MeshComponent.h"
 #include "include/MaterialComponent.h"
 #include "include/CameraComponent.h"
 #include "include/TransformComponent.h"
 #include "include/ModelComponent.h"
+
+using namespace Microsoft::WRL;
 
 class Renderer {
 public:
@@ -30,8 +33,7 @@ public:
     void Terminate();
 
     // メッシュ描画（メッシュ・マテリアル・トランスフォーム・カメラ情報）
-    void DrawMesh(const ModelComponent& model,
-        const MaterialComponent& material,
+    void DrawMesh(const ModelComponent& modelComp,
         const TransformComponent& transform,
         const CameraComponent& camera,
         AssetManager& assetManager);
@@ -55,6 +57,15 @@ public:
     int GetWindowWidth() const { return m_width; }
     int GetWindowHeight() const { return m_height; }
 
+	ID3D12DescriptorHeap* GetSrvHeap() const { return m_srvHeap.Get(); }
+    UINT GetSrvDescriptorSize() const { return m_srvDescriptorSize; }
+    UINT AllocateSrvIndex() {
+        return m_nextSrvIndex++;
+    }
+
+    // フェンス信号送信と待機
+    void SignalAndWait(UINT frameIndex);
+
 private:
     Renderer() = default;
     ~Renderer() = default;
@@ -62,36 +73,45 @@ private:
     Renderer& operator=(const Renderer&) = delete;
 
     // DirectX12デバイス関連
-    Microsoft::WRL::ComPtr<ID3D12Device> m_device;
-    Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
+    ComPtr<ID3D12Device> m_device;
+    ComPtr<IDXGISwapChain3> m_swapChain;
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
+    ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+    ComPtr<ID3D12GraphicsCommandList> m_commandList;
+    
 
     // レンダーターゲット（ダブルバッファリング）
     static const UINT FrameCount = 2;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     UINT m_rtvDescriptorSize = 0;
     UINT m_currentFrameIndex = 0;
 
+    ComPtr<ID3D12Resource> m_depthStencilBuffer;
+    D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle{};
+    ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+    UINT m_srvDescriptorSize = 0;
+    UINT m_nextSrvIndex = 0;
+
     // GPU同期用フェンス関連
-    Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
+    ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue = 0;
     HANDLE m_fenceEvent = nullptr;
     std::vector<UINT64> m_fenceValues; // 各フレームのフェンス値管理（サイズはFrameCount）
 
     // パイプラインステートオブジェクト（PSO）とルートシグネチャ（パイプライン設定）
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+    ComPtr<ID3D12PipelineState> m_pipelineState;
+    ComPtr<ID3D12RootSignature> m_rootSignature;
 
     // 定数バッファ（ワールド・ビュー・プロジェクション行列用）
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_viewCB;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_projCB;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_worldCB;
+    ComPtr<ID3D12Resource> m_viewCB;
+    ComPtr<ID3D12Resource> m_projCB;
+    ComPtr<ID3D12Resource> m_worldCB;
 
     // 一時アップロード用バッファ（フレームごとに複数確保）
-    std::vector<std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>> m_tempUploadBuffers;
+    std::vector<std::vector<ComPtr<ID3D12Resource>>> m_tempUploadBuffers;
 
     // ウィンドウ情報（ハンドルとサイズ）
     HWND m_hwnd = nullptr;
@@ -111,9 +131,8 @@ private:
     void WaitForGpu(UINT frameIndex);
 
     // 定数バッファ（行列など）の更新
-    void UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera);
+    HRESULT UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera);
 
-    // フェンス信号送信と待機
-    void SignalAndWait(UINT frameIndex);
+
 };
 

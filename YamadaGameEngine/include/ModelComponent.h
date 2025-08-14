@@ -13,7 +13,7 @@ public:
     const std::string& GetModelId() const { return m_modelId; }
 
     // 実体アクセス
-    const ModelData* GetModelData(AssetManager& assets) const {
+    const ModelDataContainer* GetModelData(AssetManager& assets) const {
         return assets.GetModel(m_modelId);
     }
 

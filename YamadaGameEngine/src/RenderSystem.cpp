@@ -19,9 +19,6 @@ void RenderSystem::Initialize(IScene& scene)
             // 必要なコンポーネントがない場合はスキップ  
             continue;  
         }  
-
-
-
     }  
 }
 
@@ -31,16 +28,15 @@ void RenderSystem::Update(IScene& scene, float deltaTime)
 
     for (const std::unique_ptr<IEntity>& entity : entities) {
         ModelComponent* model = entity->GetComponent<ModelComponent>();
-        MaterialComponent* material = entity->GetComponent<MaterialComponent>();
         TransformComponent* transform = entity->GetComponent<TransformComponent>();
 		CameraComponent* camera = scene.GetMainCameraEntity()->GetComponent<CameraComponent>();
 
-        if (!model || !material || !transform) {
+        if (!model  || !transform || !camera) {
             // 描画に必要な情報が揃っていないのでスキップ
             continue;
         }
 
-        Renderer::GetInstance().DrawMesh(*model, *material, *transform, *camera,scene.GetAssetManager());
+        Renderer::GetInstance().DrawMesh(*model, *transform, *camera,scene.GetAssetManager());
 
         //RenderComponent* renderComponent = entity->GetComponent<RenderComponent>();
         //if (renderComponent) {
