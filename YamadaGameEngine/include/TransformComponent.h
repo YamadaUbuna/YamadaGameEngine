@@ -38,16 +38,12 @@ public:
 
 	void UpdateWorldMatrix(XMMATRIX worldMat) { worldMatrix = worldMat; }
 
-    ID3D12Resource* GetConstantBuffer() const {
-        return constantBuffer.Get();
-    }
-
-    void SetConstantBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource>& buffer) {
-        constantBuffer = buffer;
-    }
-
 	void Translate(const XMFLOAT3& translation);
 	void Rotate(const XMFLOAT3& deltaRotation);
+
+	// ゲッター（読み取り専用）
+	Microsoft::WRL::ComPtr<ID3D12Resource>& SetWorldCB() { return m_worldCB; }
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetWorldCB() const { return m_worldCB; }
 
 private:
 	// Position, rotation, scale
@@ -63,7 +59,9 @@ private:
 
 	XMMATRIX worldMatrix{};
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
+	// 定数バッファ（ワールド・ビュー・プロジェクション行列用）
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_worldCB;
 
 	void UpdateAxesAndWorldMatrix();
 };

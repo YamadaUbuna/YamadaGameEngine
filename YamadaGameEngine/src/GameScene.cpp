@@ -9,6 +9,7 @@
 
 #include "include/exampleEntity.h"
 #include "include/CameraEntity.h"
+#include "include/Cube.h"
 
 
 
@@ -18,8 +19,10 @@ void GameScene::Initialize()
 
     assetManager.LoadModel("hero", L"Resource/cubedayo.fbx");
 
-    IEntity* test = CreateEntity<exampleEntity>(this);
+    IEntity* test = CreateEntity<exampleEntity>();
+	IEntity* cube = CreateEntity<cubeEntity>();
 	IEntity* cameraEntity = CreateEntity<CameraEntity>();
+
 
     exampleSystem* exampleSys = new exampleSystem();
 	TransformSystem* transformSys = new TransformSystem();

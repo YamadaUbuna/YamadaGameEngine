@@ -24,6 +24,7 @@
     <ClCompile Include="include\TransformComponent.cpp" />
     <ClCompile Include="src\AssetManager.cpp" />
     <ClCompile Include="src\CameraSystem.cpp" />
+    <ClCompile Include="src\cube.cpp" />
     <ClCompile Include="src\exampleEntity.cpp" />
     <ClCompile Include="src\exampleSystem.cpp" />
     <ClCompile Include="src\GameScene.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="include\CameraComponent.h" />
     <ClInclude Include="include\CameraEntity.h" />
     <ClInclude Include="include\CameraSystem.h" />
+    <ClInclude Include="include\Cube.h" />
     <ClInclude Include="include\EntityBase.h" />
     <ClInclude Include="include\exampleComponent.h" />
     <ClInclude Include="include\exampleEntity.h" />

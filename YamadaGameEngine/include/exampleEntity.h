@@ -14,7 +14,7 @@ class exampleEntity : public EntityBase {
     // ここにexampleEntity固有の処理があれば追加
 
 public:
-    exampleEntity(IScene* scene);
+    exampleEntity();
 	~exampleEntity() override = default; // デストラクタは必要ならオーバーライド
 };
 

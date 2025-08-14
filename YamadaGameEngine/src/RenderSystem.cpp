@@ -1,7 +1,7 @@
 #include "include\pch.h"
 #include "include/RenderSystem.h"
-#include "include/Renderer.h"
 #include <stdexcept>
+#include "include/Renderer.h"
 
 //ここに関数作って、MeshComponentの情報を綺麗にする。
 
@@ -35,7 +35,7 @@ void RenderSystem::Update(IScene& scene, float deltaTime)
             // 描画に必要な情報が揃っていないのでスキップ
             continue;
         }
-
+        UpdateConstantBuffers(transform, camera);
         Renderer::GetInstance().DrawMesh(*model, *transform, *camera,scene.GetAssetManager());
 
         //RenderComponent* renderComponent = entity->GetComponent<RenderComponent>();
@@ -49,6 +49,65 @@ void RenderSystem::Update(IScene& scene, float deltaTime)
         //}
     }
 }
+
+
+inline UINT AlignTo256(UINT size) {
+    return (size + 255u) & ~255u;
+}
+
+HRESULT RenderSystem::UpdateConstantBuffers(TransformComponent* transform, CameraComponent* camera)
+{
+    if (!transform || !camera) return E_POINTER;
+
+    auto CreateAndUpdateCB = [&](Microsoft::WRL::ComPtr<ID3D12Resource>& cb, const void* data, size_t size) -> HRESULT
+        {
+            if (!cb)
+            {
+                CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+                CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignTo256(size));
+
+                HRESULT hr = Renderer::GetInstance().GetDevice()->CreateCommittedResource(
+                    &heapProps,
+                    D3D12_HEAP_FLAG_NONE,
+                    &bufferDesc,
+                    D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&cb)
+                );
+                if (FAILED(hr)) return hr;
+            }
+
+            void* mappedPtr = nullptr;
+            D3D12_RANGE readRange{ 0,0 };
+            HRESULT hr = cb->Map(0, &readRange, &mappedPtr);
+            if (FAILED(hr)) return hr;
+
+            memcpy(mappedPtr, data, size);
+
+            // Mapは保持するのでUnmap不要
+            return S_OK;
+        };
+
+    DirectX::XMMATRIX world = XMMatrixTranspose(transform->GetWorldMatrix());
+    DirectX::XMMATRIX view = XMMatrixTranspose(camera->GetViewMatrix());
+    DirectX::XMMATRIX proj = XMMatrixTranspose(camera->GetProjMatrix());
+
+    HRESULT hr = S_OK;
+
+    // TransformComponent に持たせた World CB を更新
+    hr = CreateAndUpdateCB(transform->SetWorldCB(), &world, sizeof(world));
+    if (FAILED(hr)) return hr;
+
+    // カメラは Renderer 側に持たせている CB を更新
+    hr = CreateAndUpdateCB(camera->SetViewCB(), &view, sizeof(view));
+    if (FAILED(hr)) return hr;
+
+    hr = CreateAndUpdateCB(camera->SetProjCB(), &proj, sizeof(proj));
+    if (FAILED(hr)) return hr;
+
+    return S_OK;
+}
+
 
 
 

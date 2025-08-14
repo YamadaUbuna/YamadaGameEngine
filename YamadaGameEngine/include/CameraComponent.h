@@ -41,6 +41,13 @@ public:
 	void SetViewMatrix(const DirectX::XMMATRIX& view) { viewMatrix = view; }
     void SetProjMatrix(const DirectX::XMMATRIX& proj) { projMatrix = proj; }
 
+    Microsoft::WRL::ComPtr<ID3D12Resource>& SetViewCB() { return m_viewCB; }
+    Microsoft::WRL::ComPtr<ID3D12Resource>& SetProjCB() { return m_projCB; }
+
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetViewCB() const { return m_viewCB; }
+    const Microsoft::WRL::ComPtr<ID3D12Resource>& GetProjCB() const { return m_projCB; }
+
+
 
 private:
 
@@ -56,4 +63,7 @@ private:
     // 結果として使う行列（毎フレーム更新）
     DirectX::XMMATRIX viewMatrix;
     DirectX::XMMATRIX projMatrix;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_viewCB;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_projCB;
 };

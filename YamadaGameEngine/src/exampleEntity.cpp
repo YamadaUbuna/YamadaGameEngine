@@ -2,7 +2,7 @@
 #include "include/exampleEntity.h"
 #include "include/IScene.h"
 
-exampleEntity::exampleEntity(IScene* scene)
+exampleEntity::exampleEntity()
 {
     AddComponent(std::make_unique<exampleComponent>());
     AddComponent(std::make_unique<TransformComponent>());
@@ -12,6 +12,4 @@ exampleEntity::exampleEntity(IScene* scene)
     transformComponent->SetPosition({ 0.0f, 0.0f, 0.0f });
     transformComponent->SetRotation({ 0.0f, 0.0f, 0.0f });
     transformComponent->SetScale({ 1.0f, 1.0, 1.0 });
-
-
 }

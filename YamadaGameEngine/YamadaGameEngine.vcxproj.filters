@@ -81,10 +81,13 @@
     <ClCompile Include="src\TransformSystem.cpp">
       <Filter>ソース ファイル\GameEngine\System</Filter>
     </ClCompile>
-    <ClCompile Include="src\AssetManager.cpp">
+    <ClCompile Include="src\ModelData.cpp">
       <Filter>ソース ファイル\GameEngine</Filter>
     </ClCompile>
-    <ClCompile Include="src\ModelData.cpp">
+    <ClCompile Include="src\cube.cpp">
+      <Filter>ソース ファイル\GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AssetManager.cpp">
       <Filter>ソース ファイル\GameEngine</Filter>
     </ClCompile>
   </ItemGroup>
@@ -169,6 +172,9 @@
     </ClInclude>
     <ClInclude Include="include\EntityBase.h">
       <Filter>ヘッダー ファイル\GameEngine\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Cube.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

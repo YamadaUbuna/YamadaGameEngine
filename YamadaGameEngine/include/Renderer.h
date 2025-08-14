@@ -105,11 +105,6 @@ private:
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12RootSignature> m_rootSignature;
 
-    // 定数バッファ（ワールド・ビュー・プロジェクション行列用）
-    ComPtr<ID3D12Resource> m_viewCB;
-    ComPtr<ID3D12Resource> m_projCB;
-    ComPtr<ID3D12Resource> m_worldCB;
-
     // 一時アップロード用バッファ（フレームごとに複数確保）
     std::vector<std::vector<ComPtr<ID3D12Resource>>> m_tempUploadBuffers;
 
@@ -129,10 +124,6 @@ private:
 
     // 指定フレームのGPU処理完了まで待機
     void WaitForGpu(UINT frameIndex);
-
-    // 定数バッファ（行列など）の更新
-    HRESULT UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera);
-
 
 };
 

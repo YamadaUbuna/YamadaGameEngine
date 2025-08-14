@@ -405,9 +405,6 @@ void Renderer::DrawMesh(
     const ModelDataContainer* modelData = assetManager.GetModel(modelComp.GetModelId());
     if (!modelData) return;
 
-    if (FAILED(UpdateConstantBuffers(&transform, &camera)))
-        return;
-
     // ★★ SRV ヒープを一度だけセットする（重要）
     ID3D12DescriptorHeap* heaps[] = { GetSrvHeap() };
     m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -422,9 +419,9 @@ void Renderer::DrawMesh(
         m_commandList->SetGraphicsRootSignature(PipelineManager::GetInstance().GetRootSignature(material->GetRootSignatureType()));
 
         // Root CBV
-        m_commandList->SetGraphicsRootConstantBufferView(0, m_viewCB->GetGPUVirtualAddress());
-        m_commandList->SetGraphicsRootConstantBufferView(1, m_projCB->GetGPUVirtualAddress());
-        m_commandList->SetGraphicsRootConstantBufferView(2, m_worldCB->GetGPUVirtualAddress());
+        m_commandList->SetGraphicsRootConstantBufferView(0, camera.GetViewCB()->GetGPUVirtualAddress());
+        m_commandList->SetGraphicsRootConstantBufferView(1, camera.GetProjCB()->GetGPUVirtualAddress());
+        m_commandList->SetGraphicsRootConstantBufferView(2, transform.GetWorldCB()->GetGPUVirtualAddress());
 
         // VB/IB
         m_commandList->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
@@ -589,57 +586,4 @@ void Renderer::SignalAndWait(UINT frameIndex)
     WaitForGpu(frameIndex);
 }
 
-inline UINT AlignTo256(UINT size) {
-    return (size + 255u) & ~255u;
-}
 
-HRESULT Renderer::UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera)
-{
-    if (!transform || !camera) return E_POINTER;
-
-    auto CreateAndUpdateCB = [&](Microsoft::WRL::ComPtr<ID3D12Resource>& cb, const void* data, size_t size) -> HRESULT
-        {
-            if (!cb)
-            {
-                CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
-                CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignTo256(size));
-
-                HRESULT hr = m_device->CreateCommittedResource(
-                    &heapProps,
-                    D3D12_HEAP_FLAG_NONE,
-                    &bufferDesc,
-                    D3D12_RESOURCE_STATE_GENERIC_READ,
-                    nullptr,
-                    IID_PPV_ARGS(&cb)
-                );
-                if (FAILED(hr)) return hr;
-            }
-
-            // Map は upload heap の場合ずっとマップしたままでもOK
-            void* mappedPtr = nullptr;
-            D3D12_RANGE readRange{ 0,0 };
-            HRESULT hr = cb->Map(0, &readRange, &mappedPtr);
-            if (FAILED(hr)) return hr;
-
-            memcpy(mappedPtr, data, size); // 256バイト境界は resourceDesc.Width で保証済み
-            // cb->Unmap(0, nullptr); // Mapしたまま保持でもOK
-
-            return S_OK;
-        };
-
-    DirectX::XMMATRIX world = XMMatrixTranspose(transform->GetWorldMatrix());
-    DirectX::XMMATRIX view = XMMatrixTranspose(camera->GetViewMatrix());
-    DirectX::XMMATRIX proj = XMMatrixTranspose(camera->GetProjMatrix());
-
-    HRESULT hr = S_OK;
-    hr = CreateAndUpdateCB(m_worldCB, &world, sizeof(world));
-    if (FAILED(hr)) return hr;
-
-    hr = CreateAndUpdateCB(m_viewCB, &view, sizeof(view));
-    if (FAILED(hr)) return hr;
-
-    hr = CreateAndUpdateCB(m_projCB, &proj, sizeof(proj));
-    if (FAILED(hr)) return hr;
-
-    return S_OK;
-}
