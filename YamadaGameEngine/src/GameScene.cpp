@@ -16,7 +16,7 @@ void GameScene::Initialize()
 {
     //‚±‚±‚ÅScene‚Åg‚¤Model‚à“o˜^‚·‚é
 
-    assetManager.LoadModel("hero", L"Resource/unitychan.fbx");
+    assetManager.LoadModel("hero", L"Resource/cubedayo.fbx");
 
     IEntity* test = CreateEntity<exampleEntity>(this);
 	IEntity* cameraEntity = CreateEntity<CameraEntity>();
@@ -26,9 +26,9 @@ void GameScene::Initialize()
 	RenderSystem* renderSys = new RenderSystem();
 	CameraSystem* cameraSys = new CameraSystem();
     AddSystem(exampleSys);
-	AddSystem(renderSys);
 	AddSystem(transformSys);
     AddSystem(cameraSys);
+    AddSystem(renderSys);
 
 	m_mainCamera = cameraEntity; // ƒƒCƒ“ƒJƒƒ‰‚ğİ’è
 

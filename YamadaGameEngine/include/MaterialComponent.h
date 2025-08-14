@@ -8,28 +8,34 @@
 class MaterialComponent : public IComponent
 {
 public:
-	MaterialComponent() = default;
+    MaterialComponent() = default;
     ~MaterialComponent() = default;
 
-	PipelineType GetPipelineType() const { return pipelineType; }
-	void SetPipelineType(PipelineType type) { pipelineType = type; }
+    // Pipeline / RootSignature
+    PipelineType GetPipelineType() const { return pipelineType; }
+    void SetPipelineType(PipelineType type) { pipelineType = type; }
 
-	RootSignatureType GetRootSignatureType() const { return rootSignatureType; }
-	void SetRootSignatureType(RootSignatureType type) { rootSignatureType = type; }
+    RootSignatureType GetRootSignatureType() const { return rootSignatureType; }
+    void SetRootSignatureType(RootSignatureType type) { rootSignatureType = type; }
+
+    // 色パラメータ
+    DirectX::XMFLOAT4 GetBaseColor() const { return baseColor; }
+    void SetBaseColor(const DirectX::XMFLOAT4& color) { baseColor = color; }
+
+    // テクスチャID
+    const std::string& GetAlbedoTextureId() const { return albedoTextureId; }
+    void SetAlbedoTextureId(const std::string& id) { albedoTextureId = id; }
 
 private:
 
     PipelineType pipelineType;
-	RootSignatureType rootSignatureType;
+    RootSignatureType rootSignatureType;
 
-    // 色パラメータ
-    DirectX::XMFLOAT4 baseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    DirectX::XMFLOAT4 baseColor = { 1,1,1,1 };
 
-    // テクスチャ
-    Microsoft::WRL::ComPtr<ID3D12Resource> albedoTexture;
-    D3D12_GPU_DESCRIPTOR_HANDLE albedoSrvHandle{};
+    std::string albedoTextureId; // AssetManager で管理するテクスチャID
 
-    // その他（今後拡張可能）
+    // 今後拡張可能
     float metallic = 0.0f;
     float roughness = 1.0f;
 };

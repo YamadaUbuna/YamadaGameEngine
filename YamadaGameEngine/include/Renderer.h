@@ -5,6 +5,7 @@
 #include <dxgi1_6.h>
 #include <string>
 #include <vector>
+#include <fbxsdk.h>
 
 #include "include/MeshComponent.h"
 #include "include/MaterialComponent.h"
@@ -32,8 +33,7 @@ public:
     void Terminate();
 
     // メッシュ描画（メッシュ・マテリアル・トランスフォーム・カメラ情報）
-    void DrawMesh(const ModelComponent& model,
-        const MaterialComponent& material,
+    void DrawMesh(const ModelComponent& modelComp,
         const TransformComponent& transform,
         const CameraComponent& camera,
         AssetManager& assetManager);
@@ -56,6 +56,15 @@ public:
     // ウィンドウサイズ取得
     int GetWindowWidth() const { return m_width; }
     int GetWindowHeight() const { return m_height; }
+
+	ID3D12DescriptorHeap* GetSrvHeap() const { return m_srvHeap.Get(); }
+    UINT GetSrvDescriptorSize() const { return m_srvDescriptorSize; }
+    UINT AllocateSrvIndex() {
+        return m_nextSrvIndex++;
+    }
+
+    // フェンス信号送信と待機
+    void SignalAndWait(UINT frameIndex);
 
 private:
     Renderer() = default;
@@ -81,6 +90,10 @@ private:
     ComPtr<ID3D12Resource> m_depthStencilBuffer;
     D3D12_CPU_DESCRIPTOR_HANDLE m_dsvHandle{};
     ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+    UINT m_srvDescriptorSize = 0;
+    UINT m_nextSrvIndex = 0;
 
     // GPU同期用フェンス関連
     ComPtr<ID3D12Fence> m_fence;
@@ -118,9 +131,8 @@ private:
     void WaitForGpu(UINT frameIndex);
 
     // 定数バッファ（行列など）の更新
-    void UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera);
+    HRESULT UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera);
 
-    // フェンス信号送信と待機
-    void SignalAndWait(UINT frameIndex);
+
 };
 

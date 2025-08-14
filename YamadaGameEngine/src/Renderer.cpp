@@ -198,31 +198,6 @@ void Renderer::Initialize(HWND hwnd, int width, int height)
 
     }
 
-    // --- コマンドアロケータ & コマンドリスト ---
-    {
-        ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
-
-        ThrowIfFailed(m_device->CreateCommandList(
-            0,
-            D3D12_COMMAND_LIST_TYPE_DIRECT,
-            m_commandAllocator.Get(),
-            nullptr,
-            IID_PPV_ARGS(&m_commandList)));
-        m_commandList->Close(); // 初期状態で閉じておく
-
-        // --- フェンスとイベント ---
-        ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-        m_fenceValue = 1;
-
-        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (!m_fenceEvent)
-            throw std::runtime_error("Failed to create fence event handle.");
-
-        // --- 一時アップロードバッファ配列初期化 ---
-        m_tempUploadBuffers.resize(FrameCount);
-        m_fenceValues.resize(FrameCount, 0); // フェンス値の初期化
-
-    }
 
     // --- 深度ステンシルバッファと DSV ヒープ作成 ---
     {
@@ -276,6 +251,44 @@ void Renderer::Initialize(HWND hwnd, int width, int height)
             nullptr,
             m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
         );
+
+    }
+
+    {
+        // SRV 用ディスクリプタヒープ作成
+        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+        srvHeapDesc.NumDescriptors = 1024; // 必要に応じて
+        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+
+        // SRV のサイズ取得（SRV/UAV/CBVは同じサイズ）
+        m_srvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    // --- コマンドアロケータ & コマンドリスト ---
+    {
+        ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+
+        ThrowIfFailed(m_device->CreateCommandList(
+            0,
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            m_commandAllocator.Get(),
+            nullptr,
+            IID_PPV_ARGS(&m_commandList)));
+        m_commandList->Close(); // 初期状態で閉じておく
+
+        // --- フェンスとイベント ---
+        ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        m_fenceValue = 1;
+
+        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (!m_fenceEvent)
+            throw std::runtime_error("Failed to create fence event handle.");
+
+        // --- 一時アップロードバッファ配列初期化 ---
+        m_tempUploadBuffers.resize(FrameCount);
+        m_fenceValues.resize(FrameCount, 0); // フェンス値の初期化
 
     }
 
@@ -380,49 +393,54 @@ void Renderer::RenderEnd()
 }
 
 
-void Renderer::DrawMesh(const ModelComponent& modelComp,
-    const MaterialComponent& material,
+void Renderer::DrawMesh(
+    const ModelComponent& modelComp,
     const TransformComponent& transform,
     const CameraComponent& camera,
-    AssetManager& assetManager
-)
+    AssetManager& assetManager)
 {
-    // ModelComponentからIDを取得
-    const std::string& id = modelComp.GetModelId();
+    // ★コマンドリストが Reset 済み & Open であること（BeginFrame 的な所で Reset しておく）
+    // m_commandList->Reset(allocator, nullptr) は BeginFrame でやっておく想定
 
-    // AssetManagerから実体を取得
-    const ModelData* modelData = assetManager.GetModel(id);
-    if (!modelData) return; // モデルが見つからなければ描画しない
+    const ModelDataContainer* modelData = assetManager.GetModel(modelComp.GetModelId());
+    if (!modelData) return;
 
-    // ModelDataのメッシュ群を描画
-    for (const auto& meshPtr : modelData->GetMeshes()) {
+    if (FAILED(UpdateConstantBuffers(&transform, &camera)))
+        return;
+
+    // ★★ SRV ヒープを一度だけセットする（重要）
+    ID3D12DescriptorHeap* heaps[] = { GetSrvHeap() };
+    m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    for (const auto& meshPtr : modelData->GetMeshes())
+    {
         const MeshComponent& mesh = *meshPtr;
+        const MaterialComponent* material = assetManager.GetMaterial(mesh.GetMaterialId());
+        if (!material) continue;
 
-        // 頂点バッファ・インデックスバッファセット
-        D3D12_VERTEX_BUFFER_VIEW vbView = mesh.GetVertexBufferView();
-        m_commandList->IASetVertexBuffers(0, 1, &vbView);
+        m_commandList->SetPipelineState(PipelineManager::GetInstance().GetPipelineState(material->GetPipelineType()));
+        m_commandList->SetGraphicsRootSignature(PipelineManager::GetInstance().GetRootSignature(material->GetRootSignatureType()));
 
-        D3D12_INDEX_BUFFER_VIEW ibView = mesh.GetIndexBufferView();
-        m_commandList->IASetIndexBuffer(&ibView);
-
-        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        // パイプラインステートとルートシグネチャ設定
-        ID3D12PipelineState* pso = PipelineManager::GetInstance().GetPipelineState(material.GetPipelineType());
-        ID3D12RootSignature* rootSig = PipelineManager::GetInstance().GetRootSignature(material.GetRootSignatureType());
-        m_commandList->SetPipelineState(pso);
-        m_commandList->SetGraphicsRootSignature(rootSig);
-
-        // 定数バッファの更新とセット
-        UpdateConstantBuffers(&transform, &camera);
-        m_commandList->SetGraphicsRootConstantBufferView(2, m_worldCB->GetGPUVirtualAddress());
+        // Root CBV
         m_commandList->SetGraphicsRootConstantBufferView(0, m_viewCB->GetGPUVirtualAddress());
         m_commandList->SetGraphicsRootConstantBufferView(1, m_projCB->GetGPUVirtualAddress());
+        m_commandList->SetGraphicsRootConstantBufferView(2, m_worldCB->GetGPUVirtualAddress());
 
-        // 描画命令
+        // VB/IB
+        m_commandList->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
+        m_commandList->IASetIndexBuffer(&mesh.GetIndexBufferView());
+        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        // ★ SRV をテーブルにセット（GPUハンドルを渡すこと）
+        if (auto texRes = assetManager.GetTexture(material->GetAlbedoTextureId()))
+            m_commandList->SetGraphicsRootDescriptorTable(3, texRes->srv); // texRes->srv は D3D12_GPU_DESCRIPTOR_HANDLE
+
+        // Draw
         m_commandList->DrawIndexedInstanced(static_cast<UINT>(mesh.GetIndices().size()), 1, 0, 0, 0);
     }
 }
+
+
 
 void Renderer::Terminate()
 {
@@ -575,92 +593,53 @@ inline UINT AlignTo256(UINT size) {
     return (size + 255u) & ~255u;
 }
 
-void Renderer::UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera)
+HRESULT Renderer::UpdateConstantBuffers(const TransformComponent* transform, const CameraComponent* camera)
 {
-    // 基本チェック
-    if (!transform) {
-        OutputDebugStringA("UpdateConstantBuffers: transform is null\n");
-        return;
-    }
-    if (!camera) {
-        OutputDebugStringA("UpdateConstantBuffers: camera is null\n");
-        return;
-    }
+    if (!transform || !camera) return E_POINTER;
 
-    auto CreateAndMapCB = [&](Microsoft::WRL::ComPtr<ID3D12Resource>& cbResource, const void* srcData, size_t size) -> HRESULT {
-        if (!cbResource) {
-            D3D12_HEAP_PROPERTIES heapProps = {};
-            heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-            heapProps.CreationNodeMask = 1;
-            heapProps.VisibleNodeMask = 1;
+    auto CreateAndUpdateCB = [&](Microsoft::WRL::ComPtr<ID3D12Resource>& cb, const void* data, size_t size) -> HRESULT
+        {
+            if (!cb)
+            {
+                CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+                CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignTo256(size));
 
-            D3D12_RESOURCE_DESC resourceDesc = {};
-            resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            resourceDesc.Width = AlignTo256(static_cast<UINT>(size)); // 256バイト境界に揃える
-            resourceDesc.Height = 1;
-            resourceDesc.DepthOrArraySize = 1;
-            resourceDesc.MipLevels = 1;
-            resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-            resourceDesc.SampleDesc.Count = 1;
-            resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-            HRESULT hr = Renderer::GetInstance().GetDevice()->CreateCommittedResource(
-                &heapProps,
-                D3D12_HEAP_FLAG_NONE,
-                &resourceDesc,
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&cbResource)
-            );
-            if (FAILED(hr)) {
-                OutputDebugStringA("CreateCommittedResource failed in CreateAndMapCB\n");
-                return hr;
+                HRESULT hr = m_device->CreateCommittedResource(
+                    &heapProps,
+                    D3D12_HEAP_FLAG_NONE,
+                    &bufferDesc,
+                    D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&cb)
+                );
+                if (FAILED(hr)) return hr;
             }
-        }
 
-        // Map の際は読み取り範囲を空にする（upload heap は CPU->GPU 書き込みのみを想定）
-        void* mappedPtr = nullptr;
-        D3D12_RANGE readRange = { 0, 0 }; // CPU が読み取らないことを示す
-        HRESULT hrMap = cbResource->Map(0, &readRange, &mappedPtr);
-        if (FAILED(hrMap) || mappedPtr == nullptr) {
-            OutputDebugStringA("ID3D12Resource::Map failed in CreateAndMapCB\n");
-            return hrMap;
-        }
+            // Map は upload heap の場合ずっとマップしたままでもOK
+            void* mappedPtr = nullptr;
+            D3D12_RANGE readRange{ 0,0 };
+            HRESULT hr = cb->Map(0, &readRange, &mappedPtr);
+            if (FAILED(hr)) return hr;
 
-        // 安全にコピー（sizeバイトだけコピーする）
-        memcpy(mappedPtr, srcData, size);
+            memcpy(mappedPtr, data, size); // 256バイト境界は resourceDesc.Width で保証済み
+            // cb->Unmap(0, nullptr); // Mapしたまま保持でもOK
 
-        // Upload heap は Unmap してもよいが、継続利用するなら Map のままでも可
-        cbResource->Unmap(0, nullptr);
-
-        return S_OK;
+            return S_OK;
         };
 
-    // 行列を取得して転置（DirectXMath の型が XMMATRIX のまま使えるならそのまま渡す）
     DirectX::XMMATRIX world = XMMatrixTranspose(transform->GetWorldMatrix());
     DirectX::XMMATRIX view = XMMatrixTranspose(camera->GetViewMatrix());
     DirectX::XMMATRIX proj = XMMatrixTranspose(camera->GetProjMatrix());
 
     HRESULT hr = S_OK;
-    hr = CreateAndMapCB(m_worldCB, &world, sizeof(world));
-    if (FAILED(hr)) {
-        OutputDebugStringA("UpdateConstantBuffers: CreateAndMapCB failed for world\n");
-        return;
-    }
+    hr = CreateAndUpdateCB(m_worldCB, &world, sizeof(world));
+    if (FAILED(hr)) return hr;
 
-    hr = CreateAndMapCB(m_viewCB, &view, sizeof(view));
-    if (FAILED(hr)) {
-        OutputDebugStringA("UpdateConstantBuffers: CreateAndMapCB failed for view\n");
-        return;
-    }
+    hr = CreateAndUpdateCB(m_viewCB, &view, sizeof(view));
+    if (FAILED(hr)) return hr;
 
-    hr = CreateAndMapCB(m_projCB, &proj, sizeof(proj));
-    if (FAILED(hr)) {
-        OutputDebugStringA("UpdateConstantBuffers: CreateAndMapCB failed for proj\n");
-        return;
-    }
+    hr = CreateAndUpdateCB(m_projCB, &proj, sizeof(proj));
+    if (FAILED(hr)) return hr;
 
+    return S_OK;
 }
-
-
