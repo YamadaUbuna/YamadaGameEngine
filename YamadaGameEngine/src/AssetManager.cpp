@@ -35,58 +35,56 @@ bool AssetManager::LoadModel(const std::string& id, const std::wstring& filepath
     return true;
 }
 
-std::string AssetManager::LoadTexture(const std::string& filepath)
+std::wstring AssetManager::LoadTexture(const std::filesystem::path& fullPath)
 {
-    // すでに読み込まれていればIDを返す
+    // ファイル名だけ取り出して自前の相対パスに変換
+    std::wstring fileName = fullPath.filename().wstring();
+    std::wstring filepath = L"Resource/Textures/" + fileName;
+
+    // すでに読み込まれていれば返す
     auto it = m_textures.find(filepath);
     if (it != m_textures.end())
         return it->first;
 
-    // 新規読み込み
     TextureResource texRes;
 
-    // ファイル名をコピー
-    std::string fileName = filepath;
-
     // PSDならTGAに変換
-    size_t pos = fileName.rfind(".psd");
-    if (pos != std::string::npos)
+    if (filepath.ends_with(L".psd"))
     {
-        fileName.replace(pos, 4, ".tga"); // 最後の.psdを.tgaに置換
+        filepath.replace(filepath.size() - 4, 4, L".tga");
+        fileName = filepath.substr(filepath.find_last_of(L"\\") + 1); // ファイル名更新
     }
 
-    // 拡張子判定（小文字に統一すると便利）
-    std::string ext = fileName.substr(fileName.find_last_of('.') + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    // 拡張子判定（小文字に統一）
+    std::wstring ext = filepath.substr(filepath.find_last_of(L'.') + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);
 
     HRESULT hr = S_OK;
     DirectX::ScratchImage image;
 
-    if (ext == "png")
+    if (ext == L"png")
     {
-        hr = DirectX::LoadFromWICFile(std::wstring(fileName.begin(), fileName.end()).c_str(),
-            DirectX::WIC_FLAGS_FORCE_RGB, nullptr, image);
+        hr = DirectX::LoadFromWICFile(filepath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, nullptr, image);
     }
-    else if (ext == "tga")
+    else if (ext == L"tga")
     {
-        hr = DirectX::LoadFromTGAFile(std::wstring(fileName.begin(), fileName.end()).c_str(),
-            nullptr, image);
+        hr = DirectX::LoadFromTGAFile(filepath.c_str(), nullptr, image);
     }
     else
     {
-        OutputDebugStringA(("Unsupported texture format: " + fileName + "\n").c_str());
-        return "";
+        OutputDebugStringW((L"Unsupported texture format: " + filepath + L"\n").c_str());
+        return L"";
     }
 
     if (FAILED(hr))
     {
-        OutputDebugStringA(("Failed to load texture: " + fileName + "\n").c_str());
-        return "";
+        OutputDebugStringW((L"Failed to load texture: " + filepath + L"\n").c_str());
+        return L"";
     }
 
     // GPU にアップロード
     hr = CreateTextureOnGPU(image.GetImages(), image.GetImageCount(), image.GetMetadata(), texRes.resource);
-    if (FAILED(hr)) return "";
+    if (FAILED(hr)) return L"";
 
     // SRV を作成
     texRes.srv = CreateShaderResourceView(texRes.resource);
@@ -97,7 +95,7 @@ std::string AssetManager::LoadTexture(const std::string& filepath)
     return filepath; // MaterialComponent にセットするID
 }
 
-const TextureResource* AssetManager::GetTexture(const std::string& id) const
+const TextureResource* AssetManager::GetTexture(const std::wstring& id) const
 {
     auto it = m_textures.find(id);
     if (it == m_textures.end()) {
@@ -444,7 +442,7 @@ std::string AssetManager::ParseMaterial(FbxSurfaceMaterial* fbxMaterial)
                 if (!fileTex) continue;
 
                 std::string texPath = fileTex->GetFileName();
-                std::string texID = LoadTexture(texPath);
+                std::wstring texID = LoadTexture(texPath);
                 material->SetAlbedoTextureId(texID);
             }
         }

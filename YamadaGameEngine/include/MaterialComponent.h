@@ -23,8 +23,8 @@ public:
     void SetBaseColor(const DirectX::XMFLOAT4& color) { baseColor = color; }
 
     // テクスチャID
-    const std::string& GetAlbedoTextureId() const { return albedoTextureId; }
-    void SetAlbedoTextureId(const std::string& id) { albedoTextureId = id; }
+    const std::wstring& GetAlbedoTextureId() const { return albedoTextureId; }
+    void SetAlbedoTextureId(const std::wstring& id) { albedoTextureId = id; }
 
 private:
 
@@ -33,7 +33,7 @@ private:
 
     DirectX::XMFLOAT4 baseColor = { 1,1,1,1 };
 
-    std::string albedoTextureId; // AssetManager で管理するテクスチャID
+    std::wstring albedoTextureId; // AssetManager で管理するテクスチャID
 
     // 今後拡張可能
     float metallic = 0.0f;

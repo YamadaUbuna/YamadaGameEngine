@@ -3,6 +3,7 @@
 #include "include/ModelData.h"
 #include <fbxsdk.h>
 #include <DirectXTex.h>
+#include <filesystem>
 
 //・ModelManager（あるいはAssetManager）
 //モデル（ModelComponentや複数メッシュのセット）を読み込み・管理・キャッシュするクラス
@@ -25,8 +26,8 @@ public:
     bool LoadModel(const std::string& id, const std::wstring& filepath);
 
     // テクスチャ読み込み
-    std::string LoadTexture(const std::string& filepath);
-    const TextureResource* GetTexture(const std::string& id) const;
+    std::wstring LoadTexture(const std::filesystem::path& fullPath);
+    const TextureResource* GetTexture(const std::wstring& id) const;
 
     // 登録済みモデルをIDから取得（読み取り専用）
     const ModelDataContainer* GetModel(const std::string& id) const;
@@ -52,7 +53,7 @@ public:
 private:
     // ID -> ModelData のマップ（ModelDataはメッシュなどを持つ実体クラス）
     std::unordered_map<std::string, std::unique_ptr<ModelDataContainer>> m_models;
-    std::unordered_map<std::string, std::unique_ptr<TextureResource>> m_textures;
+    std::unordered_map<std::wstring, std::unique_ptr<TextureResource>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MaterialComponent>> m_materials;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap; // SRV用ヒープ
     void UploadMeshToGPU(MeshComponent* meshComponent);
