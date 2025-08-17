@@ -1,5 +1,6 @@
 #include "include/pch.h"
-#include "TransformComponent.h"
+#include "include/TransformComponent.h"
+
 #include <cmath>
 
 namespace
@@ -46,17 +47,24 @@ void TransformComponent::SetRotation(const XMFLOAT3& rot)
     XMStoreFloat4(&quatRotation, q);
 }
 
-void TransformComponent::SetQuaternionRotation(const XMFLOAT4& quat)
+void TransformComponent::SetQuaternionRotation(const XMVECTOR& q)
 {
-    quatRotation = quat;
+    XMStoreFloat4(&quatRotation, q);
 
-    // クォータニオン→オイラー角に変換して保持（必要なら）
+    // forward/up/right を更新
+    XMStoreFloat3(&forward, XMVector3Rotate(XMVectorSet(0, 0, 1, 0), q));
+    XMStoreFloat3(&up, XMVector3Rotate(XMVectorSet(0, 1, 0, 0), q));
+    XMStoreFloat3(&right, XMVector3Rotate(XMVectorSet(1, 0, 0, 0), q));
+
+    // オイラー角も更新
     float pitch, yaw, roll;
-    XMQuaternionToEulerAngles(XMLoadFloat4(&quatRotation), &pitch, &yaw, &roll);
+    XMQuaternionToEulerAngles(q, &pitch, &yaw, &roll);
     rotation.x = XMConvertToDegrees(pitch);
     rotation.y = XMConvertToDegrees(yaw);
     rotation.z = XMConvertToDegrees(roll);
+
 }
+
 
 void TransformComponent::Translate(const XMFLOAT3& translation)
 {
@@ -88,6 +96,34 @@ void TransformComponent::Rotate(const XMFLOAT3& deltaRotation)
     rotation.y = XMConvertToDegrees(outYaw);
     rotation.z = XMConvertToDegrees(outRoll);
 }
+
+void TransformComponent::LookAt(const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up)
+{
+    using namespace DirectX;
+
+    XMVECTOR posVec = XMLoadFloat3(&position);
+    XMVECTOR targetVec = XMLoadFloat3(&target);
+    XMVECTOR upVec = XMLoadFloat3(&up);
+
+    // forward ベクトルを計算
+    XMVECTOR forward = XMVector3Normalize(targetVec - posVec);
+
+    // LookAt からクォータニオンを作る
+    XMVECTOR right = XMVector3Normalize(XMVector3Cross(upVec, forward));
+    XMVECTOR camUp = XMVector3Cross(forward, right);
+
+    XMMATRIX rotMat;
+    rotMat.r[0] = right;
+    rotMat.r[1] = camUp;
+    rotMat.r[2] = forward;
+    rotMat.r[3] = XMVectorSet(0, 0, 0, 1);
+
+    XMVECTOR quat = XMQuaternionRotationMatrix(rotMat);
+
+    // TransformComponent にクォータニオンとして保存
+    XMStoreFloat4(&quatRotation, quat);
+}
+
 
 void TransformComponent::UpdateAxesAndWorldMatrix()
 {

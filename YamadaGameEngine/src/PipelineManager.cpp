@@ -40,11 +40,12 @@ Microsoft::WRL::ComPtr<ID3D12RootSignature> PipelineManager::CreateRootSignature
     CD3DX12_DESCRIPTOR_RANGE srvRange;
     srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-    CD3DX12_ROOT_PARAMETER rootParams[4];
+    CD3DX12_ROOT_PARAMETER rootParams[5];
     rootParams[0].InitAsConstantBufferView(0); // b0: View
     rootParams[1].InitAsConstantBufferView(1); // b1: Projection
     rootParams[2].InitAsConstantBufferView(2); // b2: World
-    rootParams[3].InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL); // t0: Diffuse
+    rootParams[3].InitAsConstantBufferView(3); // b3: Material(BaseColor‚Æ‚©)
+    rootParams[4].InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL); // t0: Diffuse
 
     // Static Sampler
     D3D12_STATIC_SAMPLER_DESC sampler = {};

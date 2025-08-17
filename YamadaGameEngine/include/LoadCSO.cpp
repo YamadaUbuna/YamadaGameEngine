@@ -1,7 +1,7 @@
 #include "include\pch.h"
 #include "include/LoadCSO.h"
 
-// Blobを返すユーティリティ関数
+
 Microsoft::WRL::ComPtr<ID3DBlob> LoadCSO(const std::wstring& filename)
 {
     std::ifstream file(filename, std::ios::binary | std::ios::ate); // ファイルを末尾から開く

@@ -34,6 +34,9 @@
     <Filter Include="ソース ファイル\GameEngine\System">
       <UniqueIdentifier>{2c63f765-1013-4a99-9cef-81187530cbbb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\System">
+      <UniqueIdentifier>{42e770c4-c06c-4160-add8-f00fd168f0b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -69,12 +72,6 @@
     <ClCompile Include="src\CameraSystem.cpp">
       <Filter>ソース ファイル\GameEngine\System</Filter>
     </ClCompile>
-    <ClCompile Include="src\exampleSystem.cpp">
-      <Filter>ソース ファイル\GameEngine\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MaterialSystem.cpp">
-      <Filter>ソース ファイル\GameEngine\System</Filter>
-    </ClCompile>
     <ClCompile Include="src\RenderSystem.cpp">
       <Filter>ソース ファイル\GameEngine\System</Filter>
     </ClCompile>
@@ -84,11 +81,23 @@
     <ClCompile Include="src\ModelData.cpp">
       <Filter>ソース ファイル\GameEngine</Filter>
     </ClCompile>
-    <ClCompile Include="src\cube.cpp">
-      <Filter>ソース ファイル\GameEngine</Filter>
-    </ClCompile>
     <ClCompile Include="src\AssetManager.cpp">
       <Filter>ソース ファイル\GameEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exampleSystem.cpp">
+      <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CubeGeneratorSystem.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DropCubeSystem.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DropCubeEntity.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GeneratorEntity.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -161,9 +170,6 @@
     <ClInclude Include="include\CameraSystem.h">
       <Filter>ヘッダー ファイル\GameEngine\System</Filter>
     </ClInclude>
-    <ClInclude Include="include\MaterialSystem.h">
-      <Filter>ヘッダー ファイル\GameEngine\System</Filter>
-    </ClInclude>
     <ClInclude Include="include\RenderSystem.h">
       <Filter>ヘッダー ファイル\GameEngine\System</Filter>
     </ClInclude>
@@ -173,7 +179,22 @@
     <ClInclude Include="include\EntityBase.h">
       <Filter>ヘッダー ファイル\GameEngine\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="include\Cube.h">
+    <ClInclude Include="include\CubeGeneratorSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CubeGeneratorComponent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DropCubeSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DropCubeComponent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DropCubeEntity.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GeneratorEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

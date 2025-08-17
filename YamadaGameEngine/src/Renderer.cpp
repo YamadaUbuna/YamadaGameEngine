@@ -1,12 +1,12 @@
 #include "include\pch.h"
 #include "include/Renderer.h"
+#include "include/d3dx12.h"
+
 #include <stdexcept>
 #include <cassert>
 #include <d3dcompiler.h>
-#include <dxgi1_6.h>
 #include <tchar.h>
-#include "include/d3dx12.h"
-#include <include/ModelComponent.h>
+
 
 // シングルトンインスタンス
 Renderer& Renderer::GetInstance() {
@@ -55,7 +55,7 @@ void Renderer::Initialize(HWND hwnd, int width, int height)
     };
     UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 
-    //DX12は、まずFactoryを作る方法が楽。
+
     Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
     CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(factory.GetAddressOf()));
 
@@ -291,7 +291,6 @@ void Renderer::Initialize(HWND hwnd, int width, int height)
         m_fenceValues.resize(FrameCount, 0); // フェンス値の初期化
 
     }
-
 }
 
 
@@ -364,7 +363,7 @@ void Renderer::RenderEnd()
     ID3D12CommandList* lists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(_countof(lists), lists);
 
-    // Present 前にフェンスを打つ（このフレームの終わりを示す）
+    // Present 前にフェンスを打つ
     m_fenceValue++;
     m_commandQueue->Signal(m_fence.Get(), m_fenceValue);
 
@@ -373,12 +372,6 @@ void Renderer::RenderEnd()
 
     // Present
     m_swapChain->Present(1, 0);
-
-    //char buf[256];
-    //sprintf_s(buf, sizeof(buf),
-    //    "RenderEnd m_currentFrameIndex:0x%p,\n",
-    //    m_currentFrameIndex);
-    //OutputDebugStringA(buf);
 
     // 次のバックバッファインデックスを取得
     // ここで取得する m_frameIndex は次回 RenderBegin で使われるインデックス
@@ -399,13 +392,10 @@ void Renderer::DrawMesh(
     const CameraComponent& camera,
     AssetManager& assetManager)
 {
-    // ★コマンドリストが Reset 済み & Open であること（BeginFrame 的な所で Reset しておく）
-    // m_commandList->Reset(allocator, nullptr) は BeginFrame でやっておく想定
 
     const ModelDataContainer* modelData = assetManager.GetModel(modelComp.GetModelId());
     if (!modelData) return;
 
-    // ★★ SRV ヒープを一度だけセットする（重要）
     ID3D12DescriptorHeap* heaps[] = { GetSrvHeap() };
     m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
@@ -422,15 +412,17 @@ void Renderer::DrawMesh(
         m_commandList->SetGraphicsRootConstantBufferView(0, camera.GetViewCB()->GetGPUVirtualAddress());
         m_commandList->SetGraphicsRootConstantBufferView(1, camera.GetProjCB()->GetGPUVirtualAddress());
         m_commandList->SetGraphicsRootConstantBufferView(2, transform.GetWorldCB()->GetGPUVirtualAddress());
+        m_commandList->SetGraphicsRootConstantBufferView(3, material->GetColorCB()->GetGPUVirtualAddress());
+
 
         // VB/IB
         m_commandList->IASetVertexBuffers(0, 1, &mesh.GetVertexBufferView());
         m_commandList->IASetIndexBuffer(&mesh.GetIndexBufferView());
         m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-        // ★ SRV をテーブルにセット（GPUハンドルを渡すこと）
+        // GPUハンドルを渡す
         if (auto texRes = assetManager.GetTexture(material->GetAlbedoTextureId()))
-            m_commandList->SetGraphicsRootDescriptorTable(3, texRes->srv); // texRes->srv は D3D12_GPU_DESCRIPTOR_HANDLE
+            m_commandList->SetGraphicsRootDescriptorTable(4, texRes->srv); // texRes->srv は D3D12_GPU_DESCRIPTOR_HANDLE
 
         // Draw
         m_commandList->DrawIndexedInstanced(static_cast<UINT>(mesh.GetIndices().size()), 1, 0, 0, 0);
@@ -465,7 +457,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
 {
     using namespace Microsoft::WRL;
 
-    // 1) Default buffer を作る
+    // Default buffer を作る
     ComPtr<ID3D12Resource> defaultBuffer;
     CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
@@ -481,7 +473,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
         throw std::runtime_error("Failed to create default buffer");
     }
 
-    // 2) Upload buffer を作る（ローカル変数）
+    // Upload buffer を作る
     ComPtr<ID3D12Resource> uploadBuffer;
     CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
     if (FAILED(m_device->CreateCommittedResource(
@@ -495,7 +487,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
         throw std::runtime_error("Failed to create upload buffer");
     }
 
-    // 3) データをマップしてコピー
+    // データをマップしてコピー
     void* mapped = nullptr;
     CD3DX12_RANGE readRange(0, 0);
     if (FAILED(uploadBuffer->Map(0, &readRange, &mapped))) {
@@ -504,7 +496,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
     memcpy(mapped, initData, static_cast<size_t>(byteSize));
     uploadBuffer->Unmap(0, nullptr);
 
-    // 4) リソース作成用の一時コマンドアロケータ / リストを作る
+    // リソース作成用の一時コマンドアロケータ / リストを作る
     ComPtr<ID3D12CommandAllocator> tempAllocator;
     ComPtr<ID3D12GraphicsCommandList> tempCmdList;
 
@@ -515,10 +507,10 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
         throw std::runtime_error("Failed to create temp command list");
     }
 
-    // 5) CopyBufferRegion で転送
+    // CopyBufferRegion で転送
     tempCmdList->CopyBufferRegion(defaultBuffer.Get(), 0, uploadBuffer.Get(), 0, byteSize);
 
-    // 6) コピー後に目的の状態へ遷移（用途に合わせて変更）
+    // コピー後に目的の状態へ遷移（用途に合わせて変更）
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         defaultBuffer.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -526,15 +518,12 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDefaultBuffer(const void*
     );
     tempCmdList->ResourceBarrier(1, &barrier);
 
-    // 7) 実行して GPU 完了を待つ（ローカルでシグナル→待ち）
+    // 実行して GPU 完了を待つ（ローカルでシグナル→待ち）
     ExecuteCommandListAndWait(m_commandQueue.Get(), tempCmdList.Get(), m_fence.Get(), m_fenceValue);
 
-    // 8) アップロードバッファは GPU が使い終わるまで保持する必要がある
-    //    フレームスロットに格納して、RenderEnd で解放判定する仕組みを使う。
-    //    ここでは現在のフレームスロットに貯める。
+
     m_tempUploadBuffers[m_currentFrameIndex].push_back(uploadBuffer);
 
-    // m_fenceValues[m_frameIndex] は上で更新済み（ExecuteCommandListAndWait が fenceValue を進めている）
     m_fenceValues[m_currentFrameIndex] = m_fenceValue;
 
     return  defaultBuffer;

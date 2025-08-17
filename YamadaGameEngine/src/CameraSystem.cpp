@@ -15,6 +15,7 @@ void CameraSystem::Initialize(IScene& scene)
             cam->SetAspectRatio(aspectRatio);
             cam->SetNearZ(0.1f);
             cam->SetFarZ(1000.0f);
+			cam->SetTarget({ 0.0f, 0.0f, 0.0f });
         }
     }
 }
@@ -42,13 +43,13 @@ void CameraSystem::Update(IScene& scene, float deltaTime)
 
     cam->SetPosition(transform->GetPosition());
 
-    DirectX::XMFLOAT3 forward = transform->GetForward();
-    DirectX::XMFLOAT3 target = {
-        transform->GetPosition().x + forward.x,
-        transform->GetPosition().y + forward.y,
-        transform->GetPosition().z + forward.z
-    };
-    cam->SetTarget(target);
+    //DirectX::XMFLOAT3 forward = transform->GetForward();
+    //DirectX::XMFLOAT3 target = {
+    //    transform->GetPosition().x + forward.x,
+    //    transform->GetPosition().y + forward.y,
+    //    transform->GetPosition().z + forward.z
+    //};
+    //cam->SetTarget(target);
     cam->SetUp(transform->GetUp());
 
     UpdateMatrices(cam);

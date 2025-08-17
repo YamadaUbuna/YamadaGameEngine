@@ -3,6 +3,10 @@
 #include <wrl/client.h>
 #include <d3d12.h>
 
+// DirectX 12のパイプラインステートオブジェクト(PSO)とルートシグネチャを管理するシングルトンクラス。
+// 複数のパイプラインタイプに対応し、PSOとルートシグネチャの生成と取得を行う。
+// グラフィックスパイプラインの設定を一元管理します。
+
 enum class RootSignatureType
 {
     def,

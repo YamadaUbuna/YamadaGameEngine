@@ -2,12 +2,17 @@
 #include <optional>
 #include "include/IComponent.h"
 
+// CameraComponentはカメラの位置・方向・視野などを管理するコンポーネントです。
+// View/Projection行列やアスペクト比、クリップ面の設定を保持・操作します。
+// DirectX 12のリソース（定数バッファ）への参照も持ち、GPU用データ管理に対応しています。
+// IComponentを継承し、シーン内のカメラとして利用されます。
+
+
 class CameraComponent : public IComponent
 {
 public:
 	CameraComponent() = default;
     ~CameraComponent() = default;
-
 
     const DirectX::XMFLOAT3& GetPosition() const { return position; }
     void SetPosition(const DirectX::XMFLOAT3& pos) { position = pos;}

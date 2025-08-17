@@ -1,5 +1,12 @@
 // Renderer.h
 #pragma once
+
+#include "include/MeshComponent.h"
+#include "include/MaterialComponent.h"
+#include "include/CameraComponent.h"
+#include "include/TransformComponent.h"
+#include "include/ModelComponent.h"
+
 #include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -7,11 +14,10 @@
 #include <vector>
 #include <fbxsdk.h>
 
-#include "include/MeshComponent.h"
-#include "include/MaterialComponent.h"
-#include "include/CameraComponent.h"
-#include "include/TransformComponent.h"
-#include "include/ModelComponent.h"
+// DirectX 12を用いたレンダラーのシングルトン管理クラス。
+// ウィンドウとの連携やデバイス初期化、描画コマンドの発行を行う。
+// メッシュやマテリアル、カメラ情報を使ってシーンの描画を実装。
+// GPU同期やリソース管理、コマンドリスト操作も担当する。
 
 using namespace Microsoft::WRL;
 
@@ -113,8 +119,6 @@ private:
     int m_width = 0;
     int m_height = 0;
 
-    // 内部処理用関数
-
     // コマンドリストを実行してGPU完了まで待機
     void ExecuteCommandListAndWait(
         ID3D12CommandQueue* commandQueue,
@@ -124,6 +128,5 @@ private:
 
     // 指定フレームのGPU処理完了まで待機
     void WaitForGpu(UINT frameIndex);
-
 };
 

@@ -1,12 +1,11 @@
 #include "include\pch.h"
 #include "include/AssetManager.h"
-#include <stdexcept>
 #include "include/Renderer.h"
 
-#include <algorithm>
-
-
 #include "include/d3dx12.h"
+#include <algorithm>
+#include <stdexcept>
+
 
 #pragma comment(lib, "DirectXTex.lib")
 
@@ -105,7 +104,7 @@ const TextureResource* AssetManager::GetTexture(const std::wstring& id) const
     return it->second.get();
 }
 
-const ModelDataContainer* AssetManager::GetModel(const std::string& id) const
+ModelDataContainer* AssetManager::GetModelForUpdate(const std::string& id) 
 {
     auto it = m_models.find(id);
     if (it == m_models.end()) {
