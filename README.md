@@ -16,6 +16,9 @@ https://www.youtube.com/watch?v=nRz4UWf_oA4
 - ECS(Entity Component System)による拡張性の高い設計
 - 当たり判定やカメラ制御を自作で実装
 
+## 製作期間
+- 二週間
+
 ## 開発環境
 - OS: Windows 10 Home 64bit
 - 言語: C++20
