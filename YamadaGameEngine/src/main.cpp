@@ -1,9 +1,10 @@
 #include "include/pch.h"
+
 #include "include/SceneManager.h"
-
 #include "include/InputManager.h"
-
 #include "include/Renderer.h"
+
+#include <windowsx.h>
 
 // グローバル変数
 HWND g_hWnd = nullptr;
@@ -17,19 +18,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         PostQuitMessage(0);
         return 0;
 
+        // キーボード
     case WM_KEYDOWN:
-        if ((lParam & (1 << 30)) == 0) {
+        if ((lParam & (1 << 30)) == 0) // 連打を防ぐ
             InputManager::OnKeyDown(wParam);
-        }
         return 0;
 
     case WM_KEYUP:
         InputManager::OnKeyUp(wParam);
         return 0;
+
+        // マウス
+    case WM_MOUSEMOVE:
+        InputManager::OnMouseMove(lParam);
+        return 0;
+
+    case WM_LBUTTONDOWN:  InputManager::OnMouseButtonDown(0); return 0;
+    case WM_RBUTTONDOWN:  InputManager::OnMouseButtonDown(1); return 0;
+    case WM_MBUTTONDOWN:  InputManager::OnMouseButtonDown(2); return 0;
+    case WM_XBUTTONDOWN:  InputManager::OnMouseButtonDown(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 3 : 4); return 0;
+
+    case WM_LBUTTONUP:    InputManager::OnMouseButtonUp(0); return 0;
+    case WM_RBUTTONUP:    InputManager::OnMouseButtonUp(1); return 0;
+    case WM_MBUTTONUP:    InputManager::OnMouseButtonUp(2); return 0;
+    case WM_XBUTTONUP:    InputManager::OnMouseButtonUp(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 3 : 4); return 0;
+
+    case WM_MOUSEWHEEL:
+        InputManager::OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+        return 0;
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
 
 
 
@@ -90,6 +111,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
             DispatchMessage(&msg);
         }
         else {
+
+            SceneManager::GetInstance().ChangeSceneProcess();
 
             // deltaTimeの計算
             LARGE_INTEGER currentTime;

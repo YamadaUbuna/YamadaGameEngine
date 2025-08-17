@@ -27,6 +27,10 @@ cbuffer WorldBuffer : register(b2)
 {
     float4x4 World;
 }
+cbuffer MaterialBuffer : register(b3)
+{
+    float4 BaseColor; // ゲームロジックで書き換える色
+}
 
 // テクスチャとサンプラー
 Texture2D gTexture : register(t0);

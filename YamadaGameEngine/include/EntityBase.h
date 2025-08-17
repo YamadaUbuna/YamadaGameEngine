@@ -2,6 +2,12 @@
 #include "include/IEntity.h"
 #include <unordered_map>
 
+// EntityBaseは、コンポーネントベースのエンティティを実装する基本クラスです。
+// 任意の型のIComponentをマップに保持し、動的な追加・取得を可能にします。
+// 型安全なテンプレート版GetComponent/AddComponentも提供しています。
+// IEntityインターフェースを実装し、シーン内のオブジェクト管理に利用されます。
+
+
 class EntityBase : public IEntity {
 protected:
     std::unordered_map<std::type_index, std::unique_ptr<IComponent>> m_components;
@@ -31,7 +37,6 @@ public:
     void AddComponent(std::unique_ptr<T> comp) {
         AddComponent(std::type_index(typeid(T)), std::move(comp));  // 既存の処理
     }
-
 
 };
 

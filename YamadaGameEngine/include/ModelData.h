@@ -1,8 +1,13 @@
 #pragma once
-#include <string>
-#include <vector>
 #include "include/MeshComponent.h"
 #include "include/MaterialComponent.h"
+
+#include <string>
+#include <vector>
+
+// メッシュコンポーネントのコレクションを管理するクラスです。
+// 複数のメッシュを保持し、追加や取得を行います。
+// モデルの構成要素として利用されます。
 
 class ModelDataContainer
 {
@@ -15,6 +20,5 @@ public:
 
 private:
     std::vector<std::unique_ptr<MeshComponent>> m_meshes;
-    //std::unordered_map<std::wstring, std::unique_ptr<MaterialContainer>> m_pMaterialContainer;
 };
 

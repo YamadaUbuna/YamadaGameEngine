@@ -1,10 +1,18 @@
 #pragma once
-#include <vector>
-#include <memory>
+
 #include "include/IEntity.h"
 #include "include/ISystem.h"
 #include "include/exampleEntity.h"
-#include "AssetManager.h"
+#include "include/AssetManager.h"
+
+#include <vector>
+#include <memory>
+
+// ISceneは、シーンの基本インターフェースを定義する抽象クラスです。
+// エンティティとシステムの管理、初期化・更新・クリーンアップ処理を担当します。
+// アセット管理やメインカメラエンティティの取得・設定も可能です。
+// シーンごとの実装はこのインターフェースを継承して行います。
+
 
 class ISystem;
 

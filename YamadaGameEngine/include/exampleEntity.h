@@ -7,11 +7,12 @@
 #include "include/MaterialComponent.h"
 #include "include/ModelComponent.h"
 
+// exampleEntityクラスのコンストラクタ実装。
+// exampleComponent、TransformComponent、ModelComponent（"cube"モデル）を持つ基本的なエンティティ。
+
 class IScene;
 
 class exampleEntity : public EntityBase {
-    // EntityBaseの実装をそのまま使うのでGetComponent/AddComponentは不要
-    // ここにexampleEntity固有の処理があれば追加
 
 public:
     exampleEntity();

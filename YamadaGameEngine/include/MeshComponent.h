@@ -2,13 +2,18 @@
 #include "include/IComponent.h"
 #include "include/d3dx12.h"
 
-//#include <fbxsdk.h>
 #include <vector>
 #include <unordered_map>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
+
+// MeshComponentは、頂点・インデックスデータおよび対応するGPUリソースを管理するコンポーネントです。
+// 頂点構造体FbxVertexを用い、位置・法線・UV・色を保持します。
+// DirectX 12のバッファとビュー情報を扱い、描画に必要な情報を提供します。
+// マテリアルIDとの関連付けにも対応しています。
+
 
 struct FbxVertex
 {

@@ -1,9 +1,14 @@
 #pragma once
-#include <memory>
-#include "MeshComponent.h"
-#include "IComponent.h"
+#include "include/MeshComponent.h"
+#include "include/IComponent.h"
 #include "include/AssetManager.h"
-#include "ModelData.h"
+#include "include/ModelData.h"
+
+#include <memory>
+
+// ModelComponentは、モデルデータへの参照（ID）を保持する軽量なコンポーネントです。
+// 実体（メッシュなど）はAssetManagerが管理し、本クラスはID経由でアクセスします。
+// モデルデータ自体は保持せず、シーン内での参照専用として機能します。
 
 
 class ModelComponent : public IComponent {
